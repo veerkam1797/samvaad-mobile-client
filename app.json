@@ -36,7 +36,8 @@
           "backgroundColor": "#ffffff",
           "dark": {
             "backgroundColor": "#000000"
-          }
+          },
+          "unstable_useServerMiddleware": true
         }
       ]
     ],
