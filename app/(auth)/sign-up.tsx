@@ -1,68 +1,75 @@
-import { useSignUp } from '@clerk/clerk-expo'
-import { Link, useRouter } from 'expo-router'
-import { useState } from 'react'
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import { Button } from "../../components/Button";
+import TextTitle from '@/components/texts/TextTitle';
+import { useSignUp } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpScreen() {
-  const { isLoaded, signUp, setActive } = useSignUp()
-  const router = useRouter()
+  const {isLoaded, signUp, setActive} = useSignUp();
+  const router = useRouter();
 
-  const [emailAddress, setEmailAddress] = useState('')
-  const [password, setPassword] = useState('')
-  const [pendingVerification, setPendingVerification] = useState(false)
-  const [code, setCode] = useState('')
+  const [emailAddress, setEmailAddress] = useState('');
+  const [password, setPassword] = useState('');
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [code, setCode] = useState('');
 
   // Handle submission of sign-up form
   const onSignUpPress = async () => {
-    if (!isLoaded) return
+    if (!isLoaded) return;
 
     // Start sign-up process using email and password provided
     try {
       await signUp.create({
         emailAddress,
         password,
-      })
+      });
 
       // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      await signUp.prepareEmailAddressVerification({strategy: 'email_code'});
 
       // Set 'pendingVerification' to true to display second form
       // and capture OTP code
-      setPendingVerification(true)
+      setPendingVerification(true);
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      console.error(JSON.stringify(err, null, 2));
     }
-  }
+  };
 
   // Handle submission of verification form
   const onVerifyPress = async () => {
-    if (!isLoaded) return
+    if (!isLoaded) return;
 
     try {
       // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code,
-      })
+      });
 
       // If verification was completed, set the session to active
       // and redirect the user
       if (signUpAttempt.status === 'complete') {
-        await setActive({ session: signUpAttempt.createdSessionId })
-        router.replace('/')
+        await setActive({session: signUpAttempt.createdSessionId});
+        router.replace('/');
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2))
+        console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      console.error(JSON.stringify(err, null, 2));
     }
-  }
+  };
 
   if (pendingVerification) {
     return (
@@ -71,58 +78,70 @@ export default function SignUpScreen() {
         <TextInput
           value={code}
           placeholder="Enter your verification code"
-          onChangeText={(code) => setCode(code)}
+          onChangeText={code => setCode(code)}
         />
         <TouchableOpacity onPress={onVerifyPress}>
           <Text>Verify</Text>
         </TouchableOpacity>
       </>
-    )
+    );
   }
 
+  // return (
+  //   <View style={styles.container}>
+  //     <View style={styles.main}>
+  //       <Text style={styles.title}>Sign up</Text>
+  //       <TextInput
+  //         autoFocus={true}
+  //         autoCapitalize="none"
+  //         value={emailAddress}
+  //         placeholder="Enter email"
+  //         onChangeText={(email) => setEmailAddress(email)}
+  //         style={styles.input}
+  //       />
+  //       <TextInput
+  //         value={password}
+  //         placeholder="Enter password"
+  //         secureTextEntry={true}
+  //         onChangeText={(password) => setPassword(password)}
+  //         style={styles.input}
+  //       />
+  //       <Button
+  //         label="Continue"
+  //         onPress={onSignUpPress}
+  //       />
+  //       <Link href="/sign-in" asChild>
+  //         <Button label="Sign in" variant="secondary" />
+  //       </Link>
+  //     </View>
+  //   </View>
+  // )
   return (
-    <View style={styles.container}>
-      <View style={styles.main}>
-        <Text style={styles.title}>Sign up</Text>
-        <TextInput
-          autoFocus={true}
-          autoCapitalize="none"
-          value={emailAddress}
-          placeholder="Enter email"
-          onChangeText={(email) => setEmailAddress(email)}
-          style={styles.input}
+    <SafeAreaView>
+      <View>
+        <TextTitle
+          variant="titleLarge"
+          text="To get started, please enter your phone number or email & password"
+          // extraStyle={{ alignSelf: 'center' }}
+          extraTextStyle={{}}
         />
-        <TextInput
-          value={password}
-          placeholder="Enter password"
-          secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
-          style={styles.input}
-        />
-        <Button
-          label="Continue"
-          onPress={onSignUpPress}
-        />
-        <Link href="/sign-in" asChild>
-          <Button label="Sign in" variant="secondary" />
-        </Link>
       </View>
-    </View>
-  )
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "stretch",
-    justifyContent: "center",
-    marginHorizontal: "auto",
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    marginHorizontal: 'auto',
     backgroundColor: '#f5f5f7',
   },
   main: {
     gap: 16,
-    justifyContent: "center",
-    alignItems: "stretch",
+    justifyContent: 'center',
+    alignItems: 'stretch',
     minWidth: 640,
     padding: 48,
     borderRadius: 16,
@@ -138,7 +157,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "700",
+    fontWeight: '700',
     paddingBottom: 16,
     color: '#1a1a1a',
     letterSpacing: -0.5,

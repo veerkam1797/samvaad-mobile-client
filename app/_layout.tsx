@@ -43,9 +43,12 @@ const NavigationLayout = () => {
     <PaperProvider theme={paperTheme}>
       <ThemeProvider value={paperTheme}>
         <Stack screenOptions={{headerShown: false}}>
+          <Stack.Screen name="(onboarding)" />
           <Stack.Protected guard={!isSignedIn}>
+            <Stack.Screen name="(auth)/social-auth" />
             <Stack.Screen name="(auth)/sign-in" />
             <Stack.Screen name="(auth)/sign-up" />
+            <Stack.Screen name="(auth)/password" />
           </Stack.Protected>
           <Stack.Protected guard={isSignedIn}>
             <Stack.Screen name="(drawer)" />
