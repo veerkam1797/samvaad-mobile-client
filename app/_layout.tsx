@@ -52,10 +52,6 @@ const NavigationLayout = () => {
           </Stack.Protected>
           <Stack.Protected guard={isSignedIn}>
             <Stack.Screen name="(drawer)" />
-            <Stack.Screen
-              name="modal"
-              options={{presentation: 'modal', title: 'Modal'}}
-            />
           </Stack.Protected>
         </Stack>
         <StatusBar style="auto" />

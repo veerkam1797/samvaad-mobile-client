@@ -2,6 +2,7 @@ import CommonIconButton from '@/components/buttons/CommonIconButton';
 import CommonTextInput from '@/components/CommonTextInput';
 import BrailleSection from '@/components/sections/BrailleSection';
 import SignSection from '@/components/sections/SignSection';
+import { router } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
@@ -15,9 +16,11 @@ export default function HomeScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={80}
       enabled>
+      {/* Transcription Mode Toggle */}
       <View style={{flex: 1}}>
         {!transcriptionMode ? <SignSection /> : <BrailleSection />}
       </View>
+      {/* Transcription Container */}
       <View style={styles.transcriptContainer}>
         {/* Button to change insert files */}
         <CommonIconButton
@@ -25,7 +28,9 @@ export default function HomeScreen() {
           icon="attachment"
           iconSize={24}
           iconColor=""
-          onPress={() => {}}
+          onPress={() => {
+            router.push('/modal');
+          }}
           extraStyle={{margin: 0}}
           contentStyle={{}}
         />

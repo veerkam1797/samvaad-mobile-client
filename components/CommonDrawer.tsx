@@ -1,12 +1,15 @@
-import {DrawerContentScrollView} from '@react-navigation/drawer';
-import {router} from 'expo-router';
+import { useUser } from '@clerk/clerk-expo';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { router } from 'expo-router';
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-import {Avatar, Drawer} from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Avatar, Drawer } from 'react-native-paper';
 
 type Props = {};
 
 const CommonDrawer = (props: Props) => {
+  const {user} = useUser();
+
   return (
     <DrawerContentScrollView
       {...props}
@@ -22,13 +25,8 @@ const CommonDrawer = (props: Props) => {
       </View>
       <Drawer.Item
         style={{padding: 0}}
-        icon={() => (
-          <Avatar.Image
-            size={36}
-            source={{uri: 'https://via.placeholder.com/150'}}
-          />
-        )}
-        label="User Name"
+        icon={() => <Avatar.Image size={36} source={{uri: user?.imageUrl}} />}
+        label={` ${user?.firstName} ${user?.lastName} ` || 'Username'}
         onPress={() => router.push('/(drawer)/settings')}
       />
     </DrawerContentScrollView>
