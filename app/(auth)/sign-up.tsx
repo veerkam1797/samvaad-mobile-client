@@ -1,34 +1,39 @@
+import CommonButton from '@/components/buttons/CommonButton';
+import { CommonIconButton } from '@/components/buttons/CommonIconButton';
+import CommonTextInput from '@/components/CommonTextInput';
 import TextTitle from '@/components/texts/TextTitle';
+import { api } from '@/convex/_generated/api';
 import { useSignUp } from '@clerk/clerk-expo';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMutation } from 'convex/react';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpScreen() {
   const {isLoaded, signUp, setActive} = useSignUp();
-  const router = useRouter();
-
-  const [emailAddress, setEmailAddress] = useState('');
-  const [password, setPassword] = useState('');
-  const [pendingVerification, setPendingVerification] = useState(false);
+  const [firstname, setFirstname] = useState<string>('');
+  const [lastname, setLastname] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
+  const [emailAddress, setEmailAddress] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [pendingVerification, setPendingVerification] =
+    useState<boolean>(false);
   const [code, setCode] = useState('');
 
-  // Handle submission of sign-up form
+  const createUser = useMutation(api.users.createUser);
+
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
     // Start sign-up process using email and password provided
     try {
       await signUp.create({
-        emailAddress,
+        emailAddress: emailAddress,
         password,
+        firstName: firstname,
+        lastName: lastname,
+        username: username,
       });
 
       // Send user an email with verification code
@@ -41,10 +46,10 @@ export default function SignUpScreen() {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
+      Alert.alert('Error', JSON.stringify(err.message));
     }
   };
 
-  // Handle submission of verification form
   const onVerifyPress = async () => {
     if (!isLoaded) return;
 
@@ -58,7 +63,16 @@ export default function SignUpScreen() {
       // and redirect the user
       if (signUpAttempt.status === 'complete') {
         await setActive({session: signUpAttempt.createdSessionId});
-        router.replace('/');
+        const ID = signUpAttempt.createdUserId;
+        createUser({
+          email: emailAddress,
+          password: password,
+          username: username,
+          first_name: firstname,
+          last_name: lastname,
+          clerkId: ID!.toString(),
+        });
+        router.replace('/(drawer)');
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
@@ -73,102 +87,136 @@ export default function SignUpScreen() {
 
   if (pendingVerification) {
     return (
-      <>
+      <SafeAreaProvider>
         <Text>Verify your email</Text>
-        <TextInput
+        {/* Verification Code Input */}
+        <CommonTextInput
+          label="Enter Verification Code"
+          placeholder="XXXXXXXX"
           value={code}
-          placeholder="Enter your verification code"
-          onChangeText={code => setCode(code)}
+          autoCapitalize="none"
+          secureText={true}
+          onChangeText={input => setCode(input)}
+          dense={false}
+          extraStyle={{}}
+          onPress={() => {}}
+          outlineStyle={{}}
         />
-        <TouchableOpacity onPress={onVerifyPress}>
-          <Text>Verify</Text>
-        </TouchableOpacity>
-      </>
+        <CommonButton
+          mode="contained"
+          label="Verify"
+          onPress={onVerifyPress}
+          extraLabelStyle={{}}
+          extraStyle={{}}
+        />
+      </SafeAreaProvider>
     );
   }
 
-  // return (
-  //   <View style={styles.container}>
-  //     <View style={styles.main}>
-  //       <Text style={styles.title}>Sign up</Text>
-  //       <TextInput
-  //         autoFocus={true}
-  //         autoCapitalize="none"
-  //         value={emailAddress}
-  //         placeholder="Enter email"
-  //         onChangeText={(email) => setEmailAddress(email)}
-  //         style={styles.input}
-  //       />
-  //       <TextInput
-  //         value={password}
-  //         placeholder="Enter password"
-  //         secureTextEntry={true}
-  //         onChangeText={(password) => setPassword(password)}
-  //         style={styles.input}
-  //       />
-  //       <Button
-  //         label="Continue"
-  //         onPress={onSignUpPress}
-  //       />
-  //       <Link href="/sign-in" asChild>
-  //         <Button label="Sign in" variant="secondary" />
-  //       </Link>
-  //     </View>
-  //   </View>
-  // )
   return (
-    <SafeAreaView>
-      <View>
-        <TextTitle
-          variant="titleLarge"
-          text="To get started, please enter your phone number or email & password"
-          // extraStyle={{ alignSelf: 'center' }}
-          extraTextStyle={{}}
+    <SafeAreaView style={{flex: 1}}>
+      <ScrollView
+        style={{flex: 1}}
+        contentContainerStyle={{
+          flexGrow: 1,
+          gap: 4,
+          // justifyContent: 'space-between',
+        }}>
+        {/* Close Page Button */}
+        <CommonIconButton
+          mode="contained"
+          icon="close"
+          iconSize={24}
+          iconColor=""
+          onPress={() => router.replace('/(auth)/social-auth')}
+          extraStyle={{}}
+          contentStyle={{}}
         />
-      </View>
+        <View style={{padding: 16, gap: 24}}>
+          {/* Title */}
+          <TextTitle
+            variant="titleLarge"
+            text="To get started, please enter your name, email & password"
+            extraTextStyle={{alignSelf: 'center'}}
+          />
+          <View style={{gap: 8}}>
+            {/* First Name Input */}
+            <CommonTextInput
+              label="Enter firstname"
+              placeholder="Case"
+              value={firstname}
+              autoCapitalize="none"
+              secureText={false}
+              onChangeText={input => setFirstname(input)}
+              dense={false}
+              extraStyle={{}}
+              onPress={() => {}}
+              outlineStyle={{}}
+            />
+            {/* Last Name Input */}
+            <CommonTextInput
+              label="Enter lastname"
+              placeholder="Walker"
+              value={lastname}
+              autoCapitalize="none"
+              secureText={false}
+              onChangeText={input => setLastname(input)}
+              dense={false}
+              extraStyle={{}}
+              onPress={() => {}}
+              outlineStyle={{}}
+            />
+            {/* USername Input */}
+            <CommonTextInput
+              label="Enter username"
+              placeholder="example_123"
+              value={username}
+              autoCapitalize="none"
+              secureText={false}
+              onChangeText={input => setUsername(input)}
+              dense={false}
+              extraStyle={{}}
+              onPress={() => {}}
+              outlineStyle={{}}
+            />
+            {/* Email Input */}
+            <CommonTextInput
+              label="Entrer your email"
+              placeholder="example@samvaad.com"
+              value={emailAddress}
+              autoCapitalize="none"
+              secureText={false}
+              onChangeText={input => setEmailAddress(input)}
+              dense={false}
+              extraStyle={{}}
+              onPress={() => {}}
+              outlineStyle={{}}
+            />
+            {/* Password Input */}
+            <CommonTextInput
+              label="Enter your password"
+              placeholder="Samvaad@123"
+              value={password}
+              autoCapitalize="none"
+              secureText={true}
+              onChangeText={input => setPassword(input)}
+              dense={false}
+              extraStyle={{}}
+              onPress={() => {}}
+              outlineStyle={{}}
+            />
+          </View>
+          <CommonButton
+            mode="contained"
+            label="Sign Up"
+            onPress={onSignUpPress}
+            extraLabelStyle={{}}
+            extraStyle={{}}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'stretch',
-    justifyContent: 'center',
-    marginHorizontal: 'auto',
-    backgroundColor: '#f5f5f7',
-  },
-  main: {
-    gap: 16,
-    justifyContent: 'center',
-    alignItems: 'stretch',
-    minWidth: 640,
-    padding: 48,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    paddingBottom: 16,
-    color: '#1a1a1a',
-    letterSpacing: -0.5,
-  },
-  input: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e5e5e5',
-    color: '#1a1a1a',
-  },
-});
+const styles = StyleSheet.create({});

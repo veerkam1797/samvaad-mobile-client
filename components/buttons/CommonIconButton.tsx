@@ -12,7 +12,7 @@ type Props = {
   extraStyle: any | undefined;
 };
 
-const CommonIconButton = (props: Props) => {
+export const CommonIconButton = (props: Props) => {
   return (
     <IconButton
       mode={props.mode}

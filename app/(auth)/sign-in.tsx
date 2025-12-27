@@ -1,17 +1,17 @@
 import CommonButton from '@/components/buttons/CommonButton';
-import CommonIconButtom from '@/components/buttons/CommonIconButton';
+import CommonIconButton from '@/components/buttons/CommonIconButton';
 import CommonTextInput from '@/components/CommonTextInput';
 import TextTitle from '@/components/texts/TextTitle';
-import { useSignIn } from '@clerk/clerk-expo';
-import { router } from 'expo-router';
-import React, { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { Divider } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {useSignIn} from '@clerk/clerk-expo';
+import {router} from 'expo-router';
+import React, {useCallback, useState} from 'react';
+import {Alert, ScrollView, StyleSheet, View} from 'react-native';
+import {Divider} from 'react-native-paper';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 export default function Login() {
   const {signIn, setActive, isLoaded} = useSignIn();
-  const [email, setEmail] = useState<string>('');
+  const [emailAddress, setEmailddress] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
   // Email & Password Sign-In Handler
@@ -20,7 +20,7 @@ export default function Login() {
     // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
-        identifier: email,
+        identifier: emailAddress,
         password,
       });
 
@@ -40,7 +40,7 @@ export default function Login() {
       console.error(JSON.stringify(error, null, 2));
       Alert.alert('Error', error.message);
     }
-  }, [isLoaded, email, password]);
+  }, [isLoaded, emailAddress, password]);
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -53,7 +53,7 @@ export default function Login() {
         }}>
         <View style={{padding: 16}}>
           {/* Close Page Button */}
-          <CommonIconButtom
+          <CommonIconButton
             mode=""
             icon="close"
             iconSize={24}
@@ -73,10 +73,10 @@ export default function Login() {
             <CommonTextInput
               label="Entrer your email"
               placeholder="example@samvaad.com"
-              value={email}
+              value={emailAddress}
               autoCapitalize="none"
               secureText={false}
-              onChangeText={input => setEmail(input)}
+              onChangeText={input => setEmailddress(input)}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}

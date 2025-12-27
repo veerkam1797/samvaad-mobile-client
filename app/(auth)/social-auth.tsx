@@ -39,8 +39,9 @@ export default function Login() {
         // For native, you must pass a scheme, like AuthSession.makeRedirectUri({ scheme, path })
         // For more info, see https://docs.expo.dev/versions/latest/sdk/auth-session/#authsessionmakeredirecturioptions
         redirectUrl: AuthSession.makeRedirectUri({
-          scheme: 'mobileclient',
-          path: Linking.createURL('/app/(drawer)/index.tsx'),
+          scheme: 'samvaad',
+          // path: Linking.createURL('/(drawer)/index'),
+          path: '/(drawer)/index',
         }),
       });
 
@@ -81,7 +82,7 @@ export default function Login() {
         // For native, you must pass a scheme, like AuthSession.makeRedirectUri({ scheme, path })
         // For more info, see https://docs.expo.dev/versions/latest/sdk/auth-session/#authsessionmakeredirecturioptions
         redirectUrl: AuthSession.makeRedirectUri({
-          scheme: 'mobileclient',
+          scheme: 'samvaad',
           path: Linking.createURL('/app/(drawer)/index.tsx'),
         }),
       });

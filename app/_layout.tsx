@@ -7,6 +7,8 @@ import {
   DefaultTheme as NavigationDefaultTheme,
   ThemeProvider,
 } from '@react-navigation/native';
+import { ConvexReactClient } from 'convex/react';
+import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import merge from 'deepmerge';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -61,7 +63,21 @@ const NavigationLayout = () => {
   );
 };
 
+const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 export default function RootLayout() {
+  if (!PUBLISHABLE_KEY) {
+    throw new Error('Add your Clerk Publishable Key to the .env file');
+  }
+
+  if (!process.env.EXPO_PUBLIC_CONVEX_URL) {
+    throw new Error('Missing EXPO_PUBLIC_CONVEX_URL in your .env file');
+  }
+
+  const convex = new ConvexReactClient(
+    process.env.EXPO_PUBLIC_CONVEX_URL as string,
+  );
+
   const [loaded] = useFonts({
     InterBlack: require('../assets/fonts/inter_black.ttf'),
     InterBold: require('../assets/fonts/inter_bold.ttf'),
@@ -79,8 +95,13 @@ export default function RootLayout() {
   }
 
   return (
-    <ClerkProvider tokenCache={tokenCache}>
-      <NavigationLayout />
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      tokenCache={tokenCache}
+      afterSignOutUrl={'/'}>
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <NavigationLayout />
+      </ConvexProviderWithClerk>
     </ClerkProvider>
   );
 }
