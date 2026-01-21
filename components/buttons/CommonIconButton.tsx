@@ -1,31 +1,40 @@
-import React from 'react';
-import {StyleSheet} from 'react-native';
-import {IconButton} from 'react-native-paper';
+import React, { memo } from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
+import { IconButton } from 'react-native-paper';
 
 type Props = {
-  mode: any | undefined;
+  mode?: 'contained' | 'contained-tonal' | 'outlined' | undefined;
   icon: string;
   iconSize: number;
-  iconColor: string;
+  iconColor?: string;
   onPress: () => void;
-  contentStyle: any | undefined;
-  extraStyle: any | undefined;
+  contentStyle?: StyleProp<ViewStyle>;
+  extraStyle?: StyleProp<ViewStyle>;
+  disabled?: boolean;
 };
 
-export const CommonIconButton = (props: Props) => {
+const CommonIconButton = memo(function CommonIconButton({
+  mode,
+  icon,
+  iconSize,
+  iconColor,
+  onPress,
+  contentStyle,
+  extraStyle,
+  disabled = false,
+}: Props) {
   return (
     <IconButton
-      mode={props.mode}
-      icon={props.icon}
-      iconColor={props.iconColor || undefined}
-      size={props.iconSize}
-      style={props.extraStyle}
-      contentStyle={props.contentStyle}
-      onPress={props.onPress}
+      mode={mode}
+      icon={icon}
+      iconColor={iconColor || undefined}
+      size={iconSize}
+      style={extraStyle}
+      contentStyle={contentStyle}
+      onPress={onPress}
+      disabled={disabled}
     />
   );
-};
+});
 
 export default CommonIconButton;
-
-const styles = StyleSheet.create({});

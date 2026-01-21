@@ -1,20 +1,24 @@
-import React from 'react';
-import {StyleSheet} from 'react-native';
-import {Text} from 'react-native-paper';
+import React, { memo } from 'react';
+import { StyleProp, StyleSheet, TextStyle } from 'react-native';
+import { Text, TextProps } from 'react-native-paper';
 
 type Props = {
-  variant: any;
+  variant: TextProps<string>['variant'];
   text: string;
-  extraTextStyle: any | undefined;
+  extraTextStyle?: StyleProp<TextStyle>;
 };
 
-const TextTitle = (props: Props) => {
+const TextTitle = memo(function TextTitle({
+  variant,
+  text,
+  extraTextStyle,
+}: Props) {
   return (
-    <Text variant={props.variant} style={[styles.text, props.extraTextStyle]}>
-      {props.text}
+    <Text variant={variant} style={[styles.text, extraTextStyle]}>
+      {text}
     </Text>
   );
-};
+});
 
 export default TextTitle;
 

@@ -1,27 +1,34 @@
-import React from 'react';
-import {StyleSheet} from 'react-native';
-import {Button} from 'react-native-paper';
+import React, { memo } from 'react';
+import { StyleProp, TextStyle, ViewStyle } from 'react-native';
+import { Button } from 'react-native-paper';
 
 type Props = {
   mode: 'contained' | 'outlined' | 'contained-tonal' | 'elevated' | undefined;
   label: string;
   onPress: () => void;
-  extraStyle: any | undefined;
-  extraLabelStyle: any | undefined;
+  extraStyle?: StyleProp<ViewStyle>;
+  extraLabelStyle?: StyleProp<TextStyle>;
+  disabled?: boolean;
 };
 
-const CommonButton = (props: Props) => {
+const CommonButton = memo(function CommonButton({
+  mode,
+  label,
+  onPress,
+  extraStyle,
+  extraLabelStyle,
+  disabled = false,
+}: Props) {
   return (
     <Button
-      mode={props.mode}
-      onPress={props.onPress}
-      style={props.extraStyle}
-      labelStyle={{fontFamily: 'InterBold', ...props.extraLabelStyle}}>
-      {props.label}
+      mode={mode}
+      onPress={onPress}
+      style={extraStyle}
+      disabled={disabled}
+      labelStyle={[{fontFamily: 'InterBold'}, extraLabelStyle]}>
+      {label}
     </Button>
   );
-};
+});
 
 export default CommonButton;
-
-const styles = StyleSheet.create({});

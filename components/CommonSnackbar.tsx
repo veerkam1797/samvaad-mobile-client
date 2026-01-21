@@ -1,30 +1,37 @@
-import React from 'react';
-import {StyleSheet} from 'react-native';
-import {Snackbar} from 'react-native-paper';
+import React, { memo, useCallback } from 'react';
+import { Snackbar } from 'react-native-paper';
 
 type Props = {
   message: string;
   visible: boolean;
   onDismissSnackBar: () => void;
   buttonText: string;
+  duration?: number;
 };
 
-const CommonSnackbar = (props: Props) => {
+const CommonSnackbar = memo(function CommonSnackbar({
+  message,
+  visible,
+  onDismissSnackBar,
+  buttonText,
+  duration = 3000,
+}: Props) {
+  const handleAction = useCallback(() => {
+    onDismissSnackBar();
+  }, [onDismissSnackBar]);
+
   return (
     <Snackbar
-      visible={props.visible}
-      onDismiss={props.onDismissSnackBar}
+      visible={visible}
+      onDismiss={onDismissSnackBar}
+      duration={duration}
       action={{
-        label: props.buttonText,
-        onPress: () => {
-          props.onDismissSnackBar();
-        },
+        label: buttonText,
+        onPress: handleAction,
       }}>
-      {props.message}
+      {message}
     </Snackbar>
   );
-};
+});
 
 export default CommonSnackbar;
-
-const styles = StyleSheet.create({});

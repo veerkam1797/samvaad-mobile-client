@@ -1,14 +1,16 @@
 import CommonButton from '@/components/buttons/CommonButton';
-import { CommonIconButton } from '@/components/buttons/CommonIconButton';
+import CommonIconButton from '@/components/buttons/CommonIconButton';
 import CommonTextInput from '@/components/CommonTextInput';
 import TextTitle from '@/components/texts/TextTitle';
+import { SPACING } from '@/constants/spacing';
 import { api } from '@/convex/_generated/api';
 import { useSignUp } from '@clerk/clerk-expo';
 import { useMutation } from 'convex/react';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import React, { useCallback, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SignUpScreen() {
   const {isLoaded, signUp, setActive} = useSignUp();
@@ -23,10 +25,13 @@ export default function SignUpScreen() {
 
   const createUser = useMutation(api.users.createUser);
 
-  const onSignUpPress = async () => {
+  const handleClose = useCallback(() => {
+    router.replace('/(auth)/social-auth');
+  }, []);
+
+  const onSignUpPress = useCallback(async () => {
     if (!isLoaded) return;
 
-    // Start sign-up process using email and password provided
     try {
       await signUp.create({
         emailAddress: emailAddress,
@@ -36,118 +41,125 @@ export default function SignUpScreen() {
         username: username,
       });
 
-      // Send user an email with verification code
       await signUp.prepareEmailAddressVerification({strategy: 'email_code'});
-
-      // Set 'pendingVerification' to true to display second form
-      // and capture OTP code
       setPendingVerification(true);
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
-      Alert.alert('Error', JSON.stringify(err.message));
+      if (__DEV__) {
+        console.error(JSON.stringify(err, null, 2));
+      }
+      Alert.alert('Error', (err as Error)?.message ?? 'Sign up failed');
     }
-  };
+  }, [isLoaded, signUp, emailAddress, password, firstname, lastname, username]);
 
-  const onVerifyPress = async () => {
+  const onVerifyPress = useCallback(async () => {
     if (!isLoaded) return;
 
     try {
-      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code,
       });
 
-      // If verification was completed, set the session to active
-      // and redirect the user
       if (signUpAttempt.status === 'complete') {
         await setActive({session: signUpAttempt.createdSessionId});
         const ID = signUpAttempt.createdUserId;
-        createUser({
+
+        await createUser({
           email: emailAddress,
-          password: password,
-          username: username,
-          first_name: firstname,
-          last_name: lastname,
           clerkId: ID!.toString(),
+          name: `${firstname} ${lastname}`.trim(),
+          preferences: {
+            preferredLanguage: 'en',
+            needsBraille: false,
+            needsISL: false,
+          },
+          createdAt: Date.now(),
         });
+
         router.replace('/(drawer)');
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+        if (__DEV__) {
+          console.error(JSON.stringify(signUpAttempt, null, 2));
+        }
       }
     } catch (err) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
+      if (__DEV__) {
+        console.error(JSON.stringify(err, null, 2));
+      }
+      Alert.alert('Error', (err as Error)?.message ?? 'Verification failed');
     }
-  };
+  }, [
+    isLoaded,
+    signUp,
+    code,
+    setActive,
+    createUser,
+    emailAddress,
+    firstname,
+    lastname,
+  ]);
 
   if (pendingVerification) {
     return (
-      <SafeAreaProvider>
-        <Text>Verify your email</Text>
-        {/* Verification Code Input */}
-        <CommonTextInput
-          label="Enter Verification Code"
-          placeholder="XXXXXXXX"
-          value={code}
-          autoCapitalize="none"
-          secureText={true}
-          onChangeText={input => setCode(input)}
-          dense={false}
-          extraStyle={{}}
-          onPress={() => {}}
-          outlineStyle={{}}
-        />
-        <CommonButton
-          mode="contained"
-          label="Verify"
-          onPress={onVerifyPress}
-          extraLabelStyle={{}}
-          extraStyle={{}}
-        />
-      </SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.verificationContainer}>
+          <Text variant="headlineMedium" style={styles.verificationTitle}>
+            Verify your email
+          </Text>
+          <CommonTextInput
+            label="Enter Verification Code"
+            placeholder="XXXXXXXX"
+            value={code}
+            autoCapitalize="none"
+            secureText={false}
+            onChangeText={setCode}
+            dense={false}
+            extraStyle={{}}
+            onPress={() => {}}
+            outlineStyle={{}}
+          />
+          <CommonButton
+            mode="contained"
+            label="Verify"
+            onPress={onVerifyPress}
+            extraLabelStyle={{}}
+            extraStyle={{}}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{
-          flexGrow: 1,
-          gap: 4,
-          // justifyContent: 'space-between',
-        }}>
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}>
         {/* Close Page Button */}
         <CommonIconButton
           mode="contained"
           icon="close"
           iconSize={24}
           iconColor=""
-          onPress={() => router.replace('/(auth)/social-auth')}
+          onPress={handleClose}
           extraStyle={{}}
           contentStyle={{}}
         />
-        <View style={{padding: 16, gap: 24}}>
+        <View style={styles.formSection}>
           {/* Title */}
           <TextTitle
             variant="titleLarge"
             text="To get started, please enter your name, email & password"
-            extraTextStyle={{alignSelf: 'center'}}
+            extraTextStyle={styles.title}
           />
-          <View style={{gap: 8}}>
+          <View style={styles.inputsContainer}>
             {/* First Name Input */}
             <CommonTextInput
               label="Enter firstname"
               placeholder="Case"
               value={firstname}
-              autoCapitalize="none"
+              autoCapitalize="words"
               secureText={false}
-              onChangeText={input => setFirstname(input)}
+              onChangeText={setFirstname}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
@@ -158,22 +170,22 @@ export default function SignUpScreen() {
               label="Enter lastname"
               placeholder="Walker"
               value={lastname}
-              autoCapitalize="none"
+              autoCapitalize="words"
               secureText={false}
-              onChangeText={input => setLastname(input)}
+              onChangeText={setLastname}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
               outlineStyle={{}}
             />
-            {/* USername Input */}
+            {/* Username Input */}
             <CommonTextInput
               label="Enter username"
               placeholder="example_123"
               value={username}
               autoCapitalize="none"
               secureText={false}
-              onChangeText={input => setUsername(input)}
+              onChangeText={setUsername}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
@@ -181,12 +193,12 @@ export default function SignUpScreen() {
             />
             {/* Email Input */}
             <CommonTextInput
-              label="Entrer your email"
+              label="Enter your email"
               placeholder="example@samvaad.com"
               value={emailAddress}
               autoCapitalize="none"
               secureText={false}
-              onChangeText={input => setEmailAddress(input)}
+              onChangeText={setEmailAddress}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
@@ -199,7 +211,7 @@ export default function SignUpScreen() {
               value={password}
               autoCapitalize="none"
               secureText={true}
-              onChangeText={input => setPassword(input)}
+              onChangeText={setPassword}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
@@ -219,4 +231,35 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    gap: SPACING.xs,
+  },
+  formSection: {
+    padding: SPACING.md,
+    gap: SPACING.lg,
+  },
+  title: {
+    alignSelf: 'center',
+  },
+  inputsContainer: {
+    gap: SPACING.sm,
+  },
+  verificationContainer: {
+    flex: 1,
+    padding: SPACING.md,
+    gap: SPACING.md,
+    justifyContent: 'center',
+  },
+  verificationTitle: {
+    textAlign: 'center',
+    fontFamily: 'InterBold',
+  },
+});

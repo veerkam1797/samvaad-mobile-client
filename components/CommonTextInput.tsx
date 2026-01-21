@@ -1,39 +1,59 @@
-import React from 'react';
-import {StyleSheet} from 'react-native';
-import {TextInput} from 'react-native-paper';
+import React, { memo } from 'react';
+import { StyleProp, TextStyle } from 'react-native';
+import { TextInput, TextInputProps } from 'react-native-paper';
 
 type CommonTextInputProps = {
   label: string;
   placeholder: string;
-  value: any;
-  autoCapitalize: any;
+  value: string;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
   secureText: boolean;
-  rightIcon?: any;
+  rightIcon?: string;
   onChangeText: (text: string) => void;
-  onPress: () => void | undefined;
-  extraStyle: any;
-  outlineStyle: any;
-  dense: boolean;
+  onPress?: () => void;
+  extraStyle?: StyleProp<TextStyle>;
+  outlineStyle?: object;
+  dense?: boolean;
+  disabled?: boolean;
+  keyboardType?: TextInputProps['keyboardType'];
 };
 
-const CommonTextInput = (props: CommonTextInputProps) => {
+const CommonTextInput = memo(function CommonTextInput({
+  label,
+  placeholder,
+  value,
+  autoCapitalize = 'none',
+  secureText,
+  rightIcon,
+  onChangeText,
+  onPress,
+  extraStyle,
+  outlineStyle,
+  dense = false,
+  disabled = false,
+  keyboardType,
+}: CommonTextInputProps) {
   return (
     <TextInput
       mode="outlined"
-      style={props.extraStyle}
-      autoCapitalize={props.autoCapitalize}
-      label={props.label}
-      placeholder={props.placeholder}
-      value={props.value}
-      secureTextEntry={props.secureText}
-      right={<TextInput.Icon icon={props.rightIcon} onPress={props.onPress} />}
-      dense={props.dense}
-      onChangeText={props.onChangeText}
-      outlineStyle={props.outlineStyle}
+      style={extraStyle}
+      autoCapitalize={autoCapitalize}
+      label={label}
+      placeholder={placeholder}
+      value={value}
+      secureTextEntry={secureText}
+      right={
+        rightIcon ? (
+          <TextInput.Icon icon={rightIcon} onPress={onPress} />
+        ) : undefined
+      }
+      dense={dense}
+      onChangeText={onChangeText}
+      outlineStyle={outlineStyle}
+      disabled={disabled}
+      keyboardType={keyboardType}
     />
   );
-};
+});
 
 export default CommonTextInput;
-
-const styles = StyleSheet.create({});

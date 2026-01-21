@@ -2,81 +2,84 @@ import CommonButton from '@/components/buttons/CommonButton';
 import CommonIconButton from '@/components/buttons/CommonIconButton';
 import CommonTextInput from '@/components/CommonTextInput';
 import TextTitle from '@/components/texts/TextTitle';
-import {useSignIn} from '@clerk/clerk-expo';
-import {router} from 'expo-router';
-import React, {useCallback, useState} from 'react';
-import {Alert, ScrollView, StyleSheet, View} from 'react-native';
-import {Divider} from 'react-native-paper';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SPACING } from '@/constants/spacing';
+import { useSignIn } from '@clerk/clerk-expo';
+import { router } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Divider } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Login() {
   const {signIn, setActive, isLoaded} = useSignIn();
-  const [emailAddress, setEmailddress] = useState<string>('');
+  const [emailAddress, setEmailAddress] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+
+  const handleClose = useCallback(() => {
+    router.replace('/(auth)/social-auth');
+  }, []);
+
+  const handleForgotPassword = useCallback(() => {
+    router.push('/(auth)/password');
+  }, []);
 
   // Email & Password Sign-In Handler
   const onSignInPress = useCallback(async () => {
     if (!isLoaded) return;
-    // Start the sign-in process using the email and password provided
+
     try {
       const signInAttempt = await signIn.create({
         identifier: emailAddress,
         password,
       });
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
       if (signInAttempt.status === 'complete') {
         await setActive({session: signInAttempt.createdSessionId});
         router.push('/(drawer)');
       } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
+        if (__DEV__) {
+          console.error(JSON.stringify(signInAttempt, null, 2));
+        }
       }
     } catch (error) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(error, null, 2));
-      Alert.alert('Error', error.message);
+      if (__DEV__) {
+        console.error(JSON.stringify(error, null, 2));
+      }
+      Alert.alert('Error', (error as Error)?.message ?? 'Sign in failed');
     }
-  }, [isLoaded, emailAddress, password]);
+  }, [isLoaded, emailAddress, password, signIn, setActive]);
 
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{
-          flexGrow: 1,
-          gap: 4,
-          justifyContent: 'space-between',
-        }}>
-        <View style={{padding: 16}}>
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}>
+        <View style={styles.topSection}>
           {/* Close Page Button */}
           <CommonIconButton
-            mode=""
+            mode={undefined}
             icon="close"
             iconSize={24}
             iconColor=""
-            onPress={() => router.replace('/(auth)/social-auth')}
-            extraStyle={{marginLeft: 0}}
+            onPress={handleClose}
+            extraStyle={styles.closeButton}
             contentStyle={{}}
           />
-          <View style={{gap: 16}}>
+          <View style={styles.formContainer}>
             {/* Title */}
             <TextTitle
               variant="titleLarge"
               text="To get started, please enter your phone number or email & password"
-              extraTextStyle={{alignSelf: 'center'}}
+              extraTextStyle={styles.title}
             />
             {/* Email Input */}
             <CommonTextInput
-              label="Entrer your email"
+              label="Enter your email"
               placeholder="example@samvaad.com"
               value={emailAddress}
               autoCapitalize="none"
               secureText={false}
-              onChangeText={input => setEmailddress(input)}
+              onChangeText={setEmailAddress}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
@@ -89,7 +92,7 @@ export default function Login() {
               value={password}
               autoCapitalize="none"
               secureText={true}
-              onChangeText={input => setPassword(input)}
+              onChangeText={setPassword}
               dense={false}
               extraStyle={{}}
               onPress={() => {}}
@@ -99,20 +102,12 @@ export default function Login() {
         </View>
         <View>
           <Divider bold />
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              gap: 12,
-              padding: 16,
-              marginTop: 16,
-            }}>
+          <View style={styles.bottomButtons}>
             {/* Forgot Password Button */}
             <CommonButton
               mode="outlined"
               label="Forgot Password ?"
-              onPress={() => router.push('/(auth)/password')}
+              onPress={handleForgotPassword}
               extraStyle={{}}
               extraLabelStyle={{}}
             />
@@ -131,4 +126,36 @@ export default function Login() {
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    gap: SPACING.xs,
+    justifyContent: 'space-between',
+  },
+  topSection: {
+    padding: SPACING.md,
+  },
+  closeButton: {
+    marginLeft: 0,
+  },
+  formContainer: {
+    gap: SPACING.md,
+  },
+  title: {
+    alignSelf: 'center',
+  },
+  bottomButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    gap: SPACING.ms,
+    padding: SPACING.md,
+    marginTop: SPACING.md,
+  },
+});

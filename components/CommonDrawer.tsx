@@ -1,49 +1,67 @@
+import { SPACING } from '@/constants/spacing';
 import { useUser } from '@clerk/clerk-expo';
-import { DrawerContentScrollView } from '@react-navigation/drawer';
+import {
+  DrawerContentComponentProps,
+  DrawerContentScrollView,
+} from '@react-navigation/drawer';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Avatar, Drawer } from 'react-native-paper';
 
-type Props = {};
+const DEFAULT_AVATAR = require('../assets/images/icon.png');
 
-const CommonDrawer = (props: Props) => {
+const CommonDrawer = memo(function CommonDrawer(
+  props: DrawerContentComponentProps,
+) {
   const {user} = useUser();
+
+  const handleSettingsPress = useCallback(() => {
+    router.push('/(drawer)/settings');
+  }, []);
+
+  const displayName = user
+    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'User'
+    : 'User';
+
+  const avatarSource = user?.imageUrl ? {uri: user.imageUrl} : DEFAULT_AVATAR;
 
   return (
     <DrawerContentScrollView
       {...props}
-      style={{flex: 1, padding: 0, margin: 0}}
-      contentContainerStyle={{
-        flexGrow: 1,
-        padding: 0,
-        margin: 0,
-        justifyContent: 'space-between',
-      }}>
-      <View style={{borderWidth: 0, borderColor: 'yellow', paddingLeft: 16}}>
-        {/* <DrawerItemList {...props} /> */}
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}>
+      <View style={styles.placeholder}>
+        {/* Drawer items can be added here */}
       </View>
       <Drawer.Item
-        style={{padding: 0}}
-        icon={() => <Avatar.Image size={36} source={{uri: user?.imageUrl}} />}
-        label={` ${user?.firstName} ${user?.lastName} ` || 'Username'}
-        onPress={() => router.push('/(drawer)/settings')}
+        style={styles.drawerItem}
+        icon={() => <Avatar.Image size={36} source={avatarSource} />}
+        label={displayName}
+        onPress={handleSettingsPress}
       />
     </DrawerContentScrollView>
   );
-};
-
-export default CommonDrawer;
+});
 
 const styles = StyleSheet.create({
-  drawerHeader: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#f6f6f6',
+  scrollView: {
+    flex: 1,
+    padding: 0,
+    margin: 0,
   },
-  drawerHeaderText: {
-    marginTop: 10,
-    fontSize: 18,
-    fontWeight: 'bold',
+  scrollContent: {
+    flexGrow: 1,
+    padding: 0,
+    margin: 0,
+    justifyContent: 'space-between',
+  },
+  placeholder: {
+    paddingLeft: SPACING.md,
+  },
+  drawerItem: {
+    padding: 0,
   },
 });
+
+export default CommonDrawer;

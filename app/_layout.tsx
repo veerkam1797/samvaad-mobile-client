@@ -1,6 +1,7 @@
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkLoaded, ClerkProvider, useAuth } from '@clerk/clerk-expo';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import {
   DarkTheme as NavigationDarkTheme,
@@ -12,7 +13,9 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import merge from 'deepmerge';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import React, { useCallback, useEffect } from 'react';
 import {
   adaptNavigationTheme,
   MD3DarkTheme,
@@ -21,6 +24,10 @@ import {
 } from 'react-native-paper';
 import 'react-native-reanimated';
 
+// Keep splash screen visible while loading resources
+SplashScreen.preventAutoHideAsync();
+
+// Custom theme colors
 const CustomLightColours = {...MD3LightTheme, colors: Colors.light};
 const CustomDarkColours = {...MD3DarkTheme, colors: Colors.dark};
 
@@ -32,14 +39,30 @@ const {LightTheme, DarkTheme} = adaptNavigationTheme({
 const CombinedLightTheme = merge(LightTheme, CustomLightColours);
 const CombinedDarkTheme = merge(DarkTheme, CustomDarkColours);
 
+// Validate environment variables at module level
+const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const CONVEX_URL = process.env.EXPO_PUBLIC_CONVEX_URL;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error('Add your Clerk Publishable Key to the .env file');
+}
+
+if (!CONVEX_URL) {
+  throw new Error('Missing EXPO_PUBLIC_CONVEX_URL in your .env file');
+}
+
+// Create Convex client once at module level to prevent recreation on every render
+const convex = new ConvexReactClient(CONVEX_URL);
+
 export const unstable_settings = {
   anchor: '(drawer)',
 };
+
 const NavigationLayout = () => {
   const {isSignedIn = false} = useAuth();
   const colorScheme = useColorScheme();
   const paperTheme =
-    colorScheme === 'dark' ? {...CombinedDarkTheme} : {...CombinedLightTheme};
+    colorScheme === 'dark' ? CombinedDarkTheme : CombinedLightTheme;
 
   return (
     <PaperProvider theme={paperTheme}>
@@ -57,28 +80,13 @@ const NavigationLayout = () => {
           </Stack.Protected>
         </Stack>
         <StatusBar style="auto" />
-        {/* <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} /> */}
       </ThemeProvider>
     </PaperProvider>
   );
 };
 
-const PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
 export default function RootLayout() {
-  if (!PUBLISHABLE_KEY) {
-    throw new Error('Add your Clerk Publishable Key to the .env file');
-  }
-
-  if (!process.env.EXPO_PUBLIC_CONVEX_URL) {
-    throw new Error('Missing EXPO_PUBLIC_CONVEX_URL in your .env file');
-  }
-
-  const convex = new ConvexReactClient(
-    process.env.EXPO_PUBLIC_CONVEX_URL as string,
-  );
-
-  const [loaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     InterBlack: require('../assets/fonts/inter_black.ttf'),
     InterBold: require('../assets/fonts/inter_bold.ttf'),
     InterExtrabold: require('../assets/fonts/inter_extrabold.ttf'),
@@ -89,19 +97,33 @@ export default function RootLayout() {
     InterRegular: require('../assets/fonts/inter_regular.ttf'),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  // Hide splash screen once fonts are loaded
+  const onLayoutComplete = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  useEffect(() => {
+    onLayoutComplete();
+  }, [onLayoutComplete]);
+
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <ClerkProvider
-      publishableKey={PUBLISHABLE_KEY}
-      tokenCache={tokenCache}
-      afterSignOutUrl={'/'}>
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <NavigationLayout />
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        tokenCache={tokenCache}
+        afterSignOutUrl={'/(auth)/social-auth'}>
+        <ClerkLoaded>
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <NavigationLayout />
+          </ConvexProviderWithClerk>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 }

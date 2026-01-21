@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
-import {ScrollView, StyleSheet, View} from 'react-native';
-import {Card, SegmentedButtons} from 'react-native-paper';
+import { SPACING } from '@/constants/spacing';
+import React, { memo, useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { Card, SegmentedButtons } from 'react-native-paper';
 import CommonSnackbar from '../CommonSnackbar';
 import TextTitle from '../texts/TextTitle';
 
@@ -8,87 +9,101 @@ type Props = {
   brailleText?: string;
 };
 
-const BrailleSection = ({brailleText = ''}: Props) => {
-  const [brailleMode, setBrailleMode] = useState<string>('G1');
+const BRAILLE_MESSAGES = {
+  G1: "You've switched to Braille Grade 1",
+  G2: "You've switched to Braille Grade 2",
+} as const;
+
+const BrailleSection = memo(function BrailleSection({brailleText = ''}: Props) {
+  const [brailleMode, setBrailleMode] = useState<'G1' | 'G2'>('G1');
   const [visible, setVisible] = useState<boolean>(false);
   const [msg, setMsg] = useState<string>('');
 
-  const msg1 = "You've switched to Braille Grade 1";
-  const msg2 = "You've switched to Braille Grade 2";
+  const handleDismissSnackbar = useCallback(() => {
+    setVisible(false);
+  }, []);
 
-  console.log('Braille Text in BrailleSection:', brailleText);
+  const handleGrade1Press = useCallback(() => {
+    setMsg(BRAILLE_MESSAGES.G1);
+    setVisible(true);
+  }, []);
+
+  const handleGrade2Press = useCallback(() => {
+    setMsg(BRAILLE_MESSAGES.G2);
+    setVisible(true);
+  }, []);
+
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingHorizontal: 16,
-        gap: 16,
-      }}>
+    <View style={styles.container}>
       <SegmentedButtons
         value={brailleMode}
-        onValueChange={setBrailleMode}
+        onValueChange={value => setBrailleMode(value as 'G1' | 'G2')}
         buttons={[
           {
             value: 'G1',
             label: 'Grade 1',
-            onPress: () => {
-              setMsg(msg1);
-              setVisible(true);
-            },
+            onPress: handleGrade1Press,
           },
           {
             value: 'G2',
             label: 'Grade 2',
-            onPress: () => {
-              setMsg(msg2);
-              setVisible(true);
-            },
+            onPress: handleGrade2Press,
           },
         ]}
       />
-      <Card mode="contained" style={{flex: 1}} contentStyle={{flex: 1}}>
+      <Card
+        mode="contained"
+        style={styles.card}
+        contentStyle={styles.cardContent}>
         <ScrollView
-          style={{
-            flex: 1,
-          }}
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: 'center',
-            alignContent: 'center',
-          }}>
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}>
           <Card.Content>
-            {brailleText ? (
-              <TextTitle
-                variant="titleLarge"
-                text={brailleText}
-                extraTextStyle={{
-                  alignSelf: 'center',
-                  textAlign: 'center',
-                }}
-              />
-            ) : (
-              <TextTitle
-                variant="titleLarge"
-                text="Start speaking or type to see your words come alive in Braille Language✨"
-                extraTextStyle={{
-                  alignSelf: 'center',
-                  textAlign: 'center',
-                }}
-              />
-            )}
+            <TextTitle
+              variant="titleLarge"
+              text={
+                brailleText ||
+                'Start speaking or type to see your words come alive in Braille Language✨'
+              }
+              extraTextStyle={styles.titleText}
+            />
           </Card.Content>
         </ScrollView>
       </Card>
       <CommonSnackbar
         message={msg}
         visible={visible}
-        onDismissSnackBar={() => setVisible(false)}
+        onDismissSnackBar={handleDismissSnackbar}
         buttonText="Okay"
       />
     </View>
   );
-};
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: SPACING.md,
+    gap: SPACING.md,
+  },
+  card: {
+    flex: 1,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignContent: 'center',
+  },
+  titleText: {
+    alignSelf: 'center',
+    textAlign: 'center',
+  },
+});
 
 export default BrailleSection;
-
-const styles = StyleSheet.create({});

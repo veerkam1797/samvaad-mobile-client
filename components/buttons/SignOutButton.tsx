@@ -1,33 +1,31 @@
-import {useClerk} from '@clerk/clerk-expo';
-import {useRouter} from 'expo-router';
-import {View} from 'react-native';
-import {Button} from 'react-native-paper';
+import { SPACING } from '@/constants/spacing';
+import { useClerk } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
+import React, { memo, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button } from 'react-native-paper';
 
-export const SignOutButton = () => {
-  // Use `useClerk()` to access the `signOut()` function
+export const SignOutButton = memo(function SignOutButton() {
   const {signOut} = useClerk();
   const router = useRouter();
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     try {
       await signOut();
-      router.replace('/(auth)');
+      router.replace('/(auth)/social-auth');
     } catch (err) {
-      console.error(JSON.stringify(err, null, 2));
+      if (__DEV__) {
+        console.error(JSON.stringify(err, null, 2));
+      }
     }
-  };
+  }, [signOut, router]);
 
-  const handleAccountDeletion = async () => {
-    // try {
-    //   await 
-    //     router.replace('/(auth)');
-    // } catch (err) {
-    //   console.error(JSON.stringify(err, null, 2));
-    // }
-  };
+  const handleAccountDeletion = useCallback(async () => {
+    // TODO: Implement account deletion
+  }, []);
 
   return (
-    <View style={{gap: 16}}>
+    <View style={styles.container}>
       <Button mode="contained" onPress={handleSignOut}>
         Sign out
       </Button>
@@ -36,4 +34,10 @@ export const SignOutButton = () => {
       </Button>
     </View>
   );
-};
+});
+
+const styles = StyleSheet.create({
+  container: {
+    gap: SPACING.md,
+  },
+});

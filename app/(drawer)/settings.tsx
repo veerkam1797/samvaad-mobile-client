@@ -1,21 +1,30 @@
 import { SignOutButton } from '@/components/buttons/SignOutButton';
 import SettingsSection from '@/components/sections/SettingsSection';
+import { SPACING } from '@/constants/spacing';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 export default function SettingsScreen() {
   return (
     <ScrollView
-      style={{flex: 1}}
-      contentContainerStyle={{
-        flexGrow: 1,
-      }}>
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContent}>
       <SettingsSection />
-      <View style={{padding: 16}}>
+      <View style={styles.buttonContainer}>
         <SignOutButton />
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  buttonContainer: {
+    padding: SPACING.md,
+  },
+});

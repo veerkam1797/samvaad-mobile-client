@@ -1,25 +1,33 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
+import React, { memo } from 'react';
+import { StyleProp, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import { Button } from 'react-native-paper';
 
 type Props = {
   label: string;
-  extraStyle: any | undefined;
-  extraTextStyle: any | undefined;
+  extraStyle?: StyleProp<ViewStyle>;
+  extraTextStyle?: StyleProp<TextStyle>;
   onPress: () => void;
+  disabled?: boolean;
 };
 
-const TextButton = (props: Props) => {
+const TextButton = memo(function TextButton({
+  label,
+  extraStyle,
+  extraTextStyle,
+  onPress,
+  disabled = false,
+}: Props) {
   return (
     <Button
       mode="text"
-      style={[props.extraStyle]}
-      onPress={props.onPress}
-      labelStyle={[styles.text, props.extraTextStyle]}>
-      {props.label}
+      style={extraStyle}
+      onPress={onPress}
+      disabled={disabled}
+      labelStyle={[styles.text, extraTextStyle]}>
+      {label}
     </Button>
   );
-};
+});
 
 export default TextButton;
 

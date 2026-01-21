@@ -1,7 +1,6 @@
-import {useAuth} from '@clerk/clerk-expo';
-import {Redirect, Stack} from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
+import { Redirect, Stack } from 'expo-router';
 import React from 'react';
-import {StyleSheet} from 'react-native';
 
 export default function OnboardingLayout() {
   const {isSignedIn} = useAuth();
@@ -9,6 +8,7 @@ export default function OnboardingLayout() {
   if (isSignedIn) {
     return <Redirect href={'/(drawer)'} />;
   }
+
   return (
     <Stack screenOptions={{headerShown: false}}>
       <Stack.Screen name="index" />
@@ -18,5 +18,3 @@ export default function OnboardingLayout() {
     </Stack>
   );
 }
-
-const styles = StyleSheet.create({});

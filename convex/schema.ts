@@ -19,6 +19,4 @@ export default defineSchema({
   users: defineTable(user)
     .index('by_clerk_id', ['clerkId'])
     .index('by_email', ['email']),
-
-  // Keep your other tables here (sessions, messages, etc.)
 });

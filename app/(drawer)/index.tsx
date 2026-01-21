@@ -2,63 +2,74 @@ import CommonIconButton from '@/components/buttons/CommonIconButton';
 import CommonTextInput from '@/components/CommonTextInput';
 import BrailleSection from '@/components/sections/BrailleSection';
 import SignSection from '@/components/sections/SignSection';
+import { RADIUS, SPACING } from '@/constants/spacing';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
+type TranscriptionMode = 'braille' | 'sign';
+
 export default function HomeScreen() {
-  const [transcribedText, setTranscribedText] = React.useState<string>('');
+  const [transcribedText, setTranscribedText] = useState<string>('');
   const [transcriptionMode, setTranscriptionMode] =
-    React.useState<any>('braille');
+    useState<TranscriptionMode>('braille');
+
+  const handleAttachmentPress = useCallback(() => {
+    router.push('/modal');
+  }, []);
+
+  const handleModeToggle = useCallback(() => {
+    setTranscriptionMode(prev => (prev === 'braille' ? 'sign' : 'braille'));
+  }, []);
+
+  const handleSendPress = useCallback(() => {
+    // TODO: Implement send functionality
+  }, []);
+
   return (
     <KeyboardAvoidingView
-      style={{flex: 1}}
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={80}
       enabled>
-      {/* Transcription Mode Toggle */}
-      <View style={{flex: 1}}>
-        {!transcriptionMode ? <SignSection /> : <BrailleSection />}
+      {/* Transcription Mode Section */}
+      <View style={styles.sectionContainer}>
+        {transcriptionMode === 'sign' ? (
+          <SignSection />
+        ) : (
+          <BrailleSection brailleText={transcribedText} />
+        )}
       </View>
-      {/* Transcription Container */}
-      <View style={styles.transcriptContainer}>
-        {/* Button to change insert files */}
+      {/* Input Container */}
+      <View style={styles.inputContainer}>
+        {/* Button to insert files */}
         <CommonIconButton
           mode="contained"
           icon="attachment"
           iconSize={24}
-          iconColor=""
-          onPress={() => {
-            router.push('/modal');
-          }}
-          extraStyle={{margin: 0}}
-          contentStyle={{}}
+          onPress={handleAttachmentPress}
+          extraStyle={styles.iconButton}
         />
-        {/* Text box to show transcription and make corrections  */}
+        {/* Text input for transcription */}
         <CommonTextInput
           label="Your text will show here"
           placeholder="Wanna change something?"
-          autoCapitalize=""
           value={transcribedText}
-          onChangeText={text => setTranscribedText(text)}
+          onChangeText={setTranscribedText}
           secureText={false}
-          rightIcon={'send'}
-          onPress={() => {}}
-          extraStyle={{flex: 1}}
-          outlineStyle={{borderRadius: 48 / 2}}
+          rightIcon="send"
+          onPress={handleSendPress}
+          extraStyle={styles.textInput}
+          outlineStyle={styles.textInputOutline}
           dense={true}
         />
-        {/* Button to change transcription mode */}
+        {/* Button to toggle transcription mode */}
         <CommonIconButton
           mode="contained"
-          icon={!transcriptionMode ? 'sign-language' : 'braille'}
+          icon={transcriptionMode === 'sign' ? 'sign-language' : 'braille'}
           iconSize={24}
-          iconColor=""
-          onPress={() => {
-            setTranscriptionMode(!transcriptionMode);
-          }}
-          extraStyle={{margin: 0}}
-          contentStyle={{}}
+          onPress={handleModeToggle}
+          extraStyle={styles.iconButton}
         />
       </View>
     </KeyboardAvoidingView>
@@ -66,13 +77,28 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  transcriptContainer: {
+  container: {
+    flex: 1,
+  },
+  sectionContainer: {
+    flex: 1,
+  },
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 12.8,
-    gap: 8,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.ms,
+    gap: SPACING.sm,
     width: '100%',
+  },
+  iconButton: {
+    margin: 0,
+  },
+  textInput: {
+    flex: 1,
+  },
+  textInputOutline: {
+    borderRadius: RADIUS.xxl,
   },
 });
